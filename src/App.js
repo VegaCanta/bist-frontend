@@ -14,8 +14,7 @@ const TF_PARAMS = {
   '240': { cci: 13, wma: 9 }, '1D': { cci: 9, wma: 9 },
   '1W': { cci: 5, wma: 9 }, '3M': { cci: 5, wma: 9 },
 }
-const CRITERIA_LABELS = { ift_cci: 'IFT CCI' }
-const CRITERIA_COLORS = { ift_cci: '#7c3aed' }
+
 
 const TurkishFlag = () => (
   <svg width="28" height="19" viewBox="0 0 36 24" style={{ borderRadius: 3 }}>
