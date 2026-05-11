@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
 
-// ── Gemini API Key — buraya kendi key'ini yaz ──
-const GEMINI_KEY = 'AIzaSyA5bzNCmBhGYMzC7gnnTdXnI-8XJ3SxZAY'
+
 
 const CRITERIA_LABELS = { ift_cci: 'IFT CCI' }
 const CRITERIA_COLORS = { ift_cci: '#7c3aed' }
@@ -88,7 +87,7 @@ function AnalysisModal({ ticker, signal, onClose }) {
     go()
   }, [ticker])
 
-  const riskColor = { 'Düşük': '#059669', 'Orta': '#d97706', 'Yüksek': '#dc2626' }
+  
   const tabs = [['temel','Temel Analiz'],['bilanco','Bilanço'],['teknik','Teknik'],['kap','KAP Haberleri']]
 
   return (
