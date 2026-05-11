@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
 
-
-
-const CRITERIA_LABELS = { ift_cci: 'IFT CCI' }
-const CRITERIA_COLORS = { ift_cci: '#7c3aed' }
-
 const TF_LABELS = {
   '30': '30 Dakika', '120': '2 Saat', '240': '4 Saat',
   '1D': 'Günlük', '1W': 'Haftalık', '3M': '3 Aylık',
@@ -19,9 +14,11 @@ const TF_PARAMS = {
   '240': { cci: 13, wma: 9 }, '1D': { cci: 9, wma: 9 },
   '1W': { cci: 5, wma: 9 }, '3M': { cci: 5, wma: 9 },
 }
+const CRITERIA_LABELS = { ift_cci: 'IFT CCI' }
+const CRITERIA_COLORS = { ift_cci: '#7c3aed' }
 
 const TurkishFlag = () => (
-  <svg width="36" height="24" viewBox="0 0 36 24" style={{ borderRadius: 3, boxShadow: '0 1px 4px rgba(0,0,0,0.15)' }}>
+  <svg width="28" height="19" viewBox="0 0 36 24" style={{ borderRadius: 3 }}>
     <rect width="36" height="24" fill="#E30A17" />
     <circle cx="15" cy="12" r="7" fill="white" />
     <circle cx="17.5" cy="12" r="5.5" fill="#E30A17" />
@@ -41,178 +38,201 @@ function fmtPrice(n) {
   return Number(n).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-function Badge({ label, color }) {
-  return (
-    <span style={{ background: color + '15', color, border: `1px solid ${color}30`, fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6, letterSpacing: 0.3, whiteSpace: 'nowrap' }}>{label}</span>
-  )
-}
+/* ── GİRİŞ EKRANI ── */
+function LoginPage({ onLogin }) {
+  const [email, setEmail]       = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState('')
 
-function StatCard({ label, value, color, sub, onClick }) {
+  async function handleLogin() {
+    setLoading(true)
+    setError('')
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) {
+      setError('Email veya şifre hatalı')
+    } else {
+      onLogin()
+    }
+    setLoading(false)
+  }
+
   return (
-    <div onClick={onClick} style={{ background: 'white', borderRadius: 14, padding: '18px 20px', border: '1px solid #e8edf5', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', cursor: onClick ? 'pointer' : 'default', transition: 'box-shadow 0.2s' }}
-      onMouseEnter={e => onClick && (e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.10)')}
-      onMouseLeave={e => onClick && (e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.04)')}>
-      <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>{sub}</div>}
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #E30A17 0%, #8B0000 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ background: 'white', borderRadius: 20, padding: '40px 32px', width: '100%', maxWidth: 400, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
+            <div style={{ width: 40, height: 40, background: 'linear-gradient(135deg, #E30A17, #c00812)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ color: 'white', fontSize: 20 }}>★</span>
+            </div>
+            <span style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', letterSpacing: -0.5 }}>BIST Tarayıcı</span>
+          </div>
+          <p style={{ color: '#94a3b8', fontSize: 13 }}>IFT CCI Sinyal Sistemi</p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Email</label>
+            <input value={email} onChange={e => setEmail(e.target.value)}
+              type="email" placeholder="email@adresin.com"
+              onKeyDown={e => e.key === 'Enter' && handleLogin()}
+              style={{ width: '100%', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '12px 14px', fontSize: 14, outline: 'none', fontFamily: 'inherit' }} />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Şifre</label>
+            <input value={password} onChange={e => setPassword(e.target.value)}
+              type="password" placeholder="••••••••"
+              onKeyDown={e => e.key === 'Enter' && handleLogin()}
+              style={{ width: '100%', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '12px 14px', fontSize: 14, outline: 'none', fontFamily: 'inherit' }} />
+          </div>
+          {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', color: '#dc2626', fontSize: 13 }}>{error}</div>}
+          <button onClick={handleLogin} disabled={loading}
+            style={{ background: loading ? '#94a3b8' : '#E30A17', border: 'none', color: 'white', padding: '14px', borderRadius: 10, cursor: loading ? 'default' : 'pointer', fontSize: 14, fontWeight: 700, fontFamily: 'inherit', marginTop: 4 }}>
+            {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+          </button>
+        </div>
+
+        <div style={{ marginTop: 24, padding: '12px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8 }}>
+          <p style={{ fontSize: 11, color: '#92400e', lineHeight: 1.5, margin: 0 }}>
+            ⚠️ Bu platform yatırım tavsiyesi içermez. Gösterilen sinyaller teknik analiz araçlarıdır ve yatırım kararı vermek için tek başına kullanılamaz.
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
 
-/* ── AI ANALİZ MODALİ ── */
+/* ── ANALİZ MODALİ ── */
 function AnalysisModal({ ticker, signal, onClose }) {
-  const [analysis, setAnalysis] = useState(null)
-  const [kapNews, setKapNews]   = useState([])
-  const [details, setDetails]   = useState(null)
-  const [loading, setLoading]   = useState(true)
-  const [tab, setTab]           = useState('temel')
+  const [kapNews, setKapNews] = useState([])
+  const [details, setDetails] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [tab, setTab]         = useState('teknik')
 
   useEffect(() => {
     async function go() {
-  setLoading(true)
-  try {
-    const [newsRes, detailsRes] = await Promise.all([
-      supabase.from('signal_news').select('*').eq('ticker', ticker).order('created_at', { ascending: false }).limit(5),
-      supabase.from('signal_details').select('*').eq('ticker', ticker).maybeSingle(),
-    ])
-    setKapNews(newsRes.data || [])
-    setDetails(detailsRes.data || null)
-    setAnalysis({ _loaded: true })
-  } catch(e) {
-    console.error(e)
-    setAnalysis({ error: 'Veri yüklenemedi: ' + e.message })
-  }
-  setLoading(false)
-  }
+      setLoading(true)
+      const [newsRes, detailsRes] = await Promise.all([
+        supabase.from('signal_news').select('*').eq('ticker', ticker).order('created_at', { ascending: false }).limit(5),
+        supabase.from('signal_details').select('*').eq('ticker', ticker).maybeSingle(),
+      ])
+      setKapNews(newsRes.data || [])
+      setDetails(detailsRes.data || null)
+      setLoading(false)
+    }
     go()
   }, [ticker])
 
-  
-  const tabs = [['temel','Temel Analiz'],['bilanco','Bilanço'],['teknik','Teknik'],['kap','KAP Haberleri']]
+  const tabs = [['teknik', 'Teknik'], ['finans', 'Finansal'], ['kap', 'KAP']]
 
   return (
-    <div style={{ position:'fixed',inset:0,background:'rgba(15,23,42,0.5)',backdropFilter:'blur(8px)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000,padding:20 }} onClick={onClose}>
-      <div style={{ background:'white',borderRadius:20,width:'min(720px,100%)',maxHeight:'88vh',overflow:'hidden',display:'flex',flexDirection:'column',boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }} onClick={e=>e.stopPropagation()}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 1000, padding: '0' }}
+      onClick={onClose}>
+      <div style={{ background: 'white', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 600, maxHeight: '85vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 -10px 40px rgba(0,0,0,0.2)' }}
+        onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div style={{ padding:'24px 28px 0',background:'linear-gradient(135deg,#E30A17,#c00812)' }}>
-          <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16 }}>
+        <div style={{ padding: '20px 20px 0', background: 'linear-gradient(135deg, #E30A17, #c00812)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div>
-              <div style={{ display:'flex',alignItems:'center',gap:10 }}>
-                <span style={{ fontSize:28,fontWeight:800,color:'white',letterSpacing:-1 }}>{ticker}</span>
-                {analysis?.sektor && <span style={{ background:'rgba(255,255,255,0.2)',color:'white',fontSize:11,padding:'3px 10px',borderRadius:20 }}>{analysis.sektor}</span>}
-                {analysis?.risk_seviyesi && <span style={{ background:'rgba(255,255,255,0.2)',color:'white',fontSize:11,padding:'3px 10px',borderRadius:20 }}>Risk: {analysis.risk_seviyesi}</span>}
-                {signal && <span style={{ background:'rgba(255,255,255,0.15)',color:'white',fontSize:11,padding:'3px 10px',borderRadius:20 }}>IFT: {signal.ift_value?.toFixed(3)}</span>}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 24, fontWeight: 800, color: 'white' }}>{ticker}</span>
+                {signal && <span style={{ background: 'rgba(255,255,255,0.2)', color: 'white', fontSize: 11, padding: '2px 8px', borderRadius: 12 }}>IFT: {signal.ift_value?.toFixed(3)}</span>}
               </div>
-              <p style={{ color:'rgba(255,255,255,0.7)',fontSize:12,marginTop:2 }}>Gemini AI — Temel & Teknik Analiz</p>
+              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, marginTop: 2 }}>
+                {TF_LABELS[signal?.timeframe] || ''} · ₺{fmtPrice(signal?.price || 0)}
+              </p>
             </div>
-            <button onClick={onClose} style={{ background:'rgba(255,255,255,0.2)',border:'none',color:'white',cursor:'pointer',fontSize:18,width:36,height:36,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center' }}>✕</button>
+            <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', width: 32, height: 32, borderRadius: 8, cursor: 'pointer', fontSize: 16 }}>✕</button>
           </div>
-          <div style={{ display:'flex',gap:2 }}>
-            {tabs.map(([key,label]) => (
-              <button key={key} onClick={()=>setTab(key)} style={{ background:tab===key?'white':'transparent',border:'none',color:tab===key?'#E30A17':'rgba(255,255,255,0.8)',padding:'7px 16px',cursor:'pointer',fontSize:12,fontWeight:600,borderRadius:'8px 8px 0 0',transition:'all 0.15s' }}>{label}</button>
+          <div style={{ display: 'flex', gap: 2 }}>
+            {tabs.map(([key, label]) => (
+              <button key={key} onClick={() => setTab(key)} style={{ background: tab === key ? 'white' : 'transparent', border: 'none', color: tab === key ? '#E30A17' : 'rgba(255,255,255,0.8)', padding: '8px 16px', cursor: 'pointer', fontSize: 12, fontWeight: 600, borderRadius: '8px 8px 0 0' }}>{label}</button>
             ))}
           </div>
         </div>
 
-        {/* İçerik */}
-        <div style={{ padding:28,overflowY:'auto',flex:1,background:'#f8fafc' }}>
+        <div style={{ padding: 20, overflowY: 'auto', flex: 1, background: '#f8fafc' }}>
           {loading ? (
-            <div style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:16,padding:'40px 0' }}>
-              <div style={{ width:40,height:40,border:'3px solid #e2e8f0',borderTop:'3px solid #E30A17',borderRadius:'50%',animation:'spin 1s linear infinite' }} />
-              <p style={{ color:'#94a3b8',fontSize:13 }}>Gemini analiz yapıyor...</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 120 }}>
+              <div style={{ width: 32, height: 32, border: '3px solid #e2e8f0', borderTop: '3px solid #E30A17', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
               <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
             </div>
-          ) : analysis?.error ? (
-            <div style={{ background:'#fef2f2',border:'1px solid #fecaca',borderRadius:12,padding:16,color:'#dc2626' }}>{analysis.error}</div>
           ) : (
             <>
-              {/* TEMEL ANALİZ */}
-              {tab==='temel' && (
-  <div style={{ display:'flex',flexDirection:'column',gap:16 }}>
-    <div style={{ background:'white',border:'1px solid #e8edf5',borderRadius:14,padding:20 }}>
-      <div style={{ fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:0.5,marginBottom:12 }}>Şirket Bilgisi</div>
-      <p style={{ color:'#475569',fontSize:14,lineHeight:1.7 }}>{details?.description || ticker + ' — finansal veri bekleniyor'}</p>
-    </div>
-    {details && (
-      <div style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:12 }}>
-        {[
-          ['Net Kar', details.net_profit ? (details.net_profit/1e9).toFixed(1)+' Milyar ₺' : '—', '#059669'],
-          ['Gelir', details.revenue ? (details.revenue/1e9).toFixed(1)+' Milyar ₺' : '—', '#2563eb'],
-          ['Toplam Varlık', details.total_assets ? (details.total_assets/1e9).toFixed(1)+' Milyar ₺' : '—', '#7c3aed'],
-          ['Özkaynaklar', details.equity ? (details.equity/1e9).toFixed(1)+' Milyar ₺' : '—', '#E30A17'],
-        ].map(([l,v,c])=>(
-          <div key={l} style={{ background:'white',border:'1px solid #e8edf5',borderRadius:14,padding:20,textAlign:'center' }}>
-            <div style={{ color:'#94a3b8',fontSize:11,fontWeight:600,marginBottom:8,textTransform:'uppercase',letterSpacing:0.5 }}>{l}</div>
-            <div style={{ color:c,fontSize:22,fontWeight:800 }}>{v}</div>
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-)}
-
-              {/* BİLANÇO */}
-              {tab==='bilanco' && (
-                <div style={{ background:'white',border:'1px solid #e8edf5',borderRadius:14,padding:20 }}>
-                  <div style={{ fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:0.5,marginBottom:12 }}>Bilanço & Sektör</div>
-                  <p style={{ color:'#475569',fontSize:14,lineHeight:1.8,marginBottom:16 }}>{analysis.bilanco_ozeti}</p>
-                  <div style={{ borderTop:'1px solid #f1f5f9',paddingTop:16 }}>
-                    <div style={{ fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:0.5,marginBottom:10 }}>Sektör Karşılaştırma</div>
-                    <p style={{ color:'#475569',fontSize:14,lineHeight:1.8 }}>{analysis.sektor_karsilastirma}</p>
+              {tab === 'teknik' && signal && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10 }}>
+                    {[
+                      ['IFT CCI Değeri', signal.ift_value?.toFixed(4) || '—', '#7c3aed'],
+                      ['Fiyat', '₺' + fmtPrice(signal.price), '#E30A17'],
+                      ['Değişim', (signal.change >= 0 ? '+' : '') + Number(signal.change).toFixed(2) + '%', signal.change >= 0 ? '#059669' : '#dc2626'],
+                      ['Zaman Dilimi', TF_LABELS[signal.timeframe] || signal.timeframe, '#2563eb'],
+                    ].map(([l, v, c]) => (
+                      <div key={l} style={{ background: 'white', border: '1px solid #e8edf5', borderRadius: 12, padding: '14px 16px', textAlign: 'center' }}>
+                        <div style={{ color: '#94a3b8', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', marginBottom: 6 }}>{l}</div>
+                        <div style={{ color: c, fontSize: 18, fontWeight: 800 }}>{v}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {TF_PARAMS[signal.timeframe] && (
+                    <div style={{ background: '#f3f0ff', borderRadius: 10, padding: '12px 14px', fontSize: 12, color: '#7c3aed', fontWeight: 600 }}>
+                      CCI uzunluk: {TF_PARAMS[signal.timeframe].cci} · WMA smoothing: {TF_PARAMS[signal.timeframe].wma}
+                    </div>
+                  )}
+                  <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '12px 14px' }}>
+                    <p style={{ fontSize: 11, color: '#92400e', margin: 0, lineHeight: 1.5 }}>⚠️ Bu sinyal yatırım tavsiyesi değildir. Kendi araştırmanızı yapınız.</p>
                   </div>
                 </div>
               )}
 
-              {/* TEKNİK */}
-              {tab==='teknik' && (
-                <div style={{ display:'flex',flexDirection:'column',gap:14 }}>
-                  {signal && (
-                    <div style={{ background:'white',border:'1px solid #e8edf5',borderRadius:14,padding:20 }}>
-                      <div style={{ fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:0.5,marginBottom:14 }}>Sinyal Detayı</div>
-                      <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10 }}>
+              {tab === 'finans' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {details ? (
+                    <>
+                      {details.description && (
+                        <div style={{ background: 'white', border: '1px solid #e8edf5', borderRadius: 12, padding: 16 }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8 }}>Şirket</div>
+                          <p style={{ color: '#475569', fontSize: 13, lineHeight: 1.6, margin: 0 }}>{details.description}</p>
+                        </div>
+                      )}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10 }}>
                         {[
-                          ['Zaman Dilimi', TF_LABELS[signal.timeframe]||signal.timeframe, '#7c3aed'],
-                          ['IFT CCI', signal.ift_value?.toFixed(4)||'—', '#059669'],
-                          ['Fiyat', '₺'+fmtPrice(signal.price), '#E30A17'],
-                        ].map(([l,v,c]) => (
-                          <div key={l} style={{ background:'#f8fafc',borderRadius:10,padding:'12px 14px',textAlign:'center' }}>
-                            <div style={{ color:'#94a3b8',fontSize:10,fontWeight:600,marginBottom:6,textTransform:'uppercase' }}>{l}</div>
-                            <div style={{ color:c,fontSize:16,fontWeight:800 }}>{v}</div>
+                          ['Net Kar', details.net_profit ? (details.net_profit / 1e9).toFixed(1) + ' Mr ₺' : '—', '#059669'],
+                          ['Gelir', details.revenue ? (details.revenue / 1e9).toFixed(1) + ' Mr ₺' : '—', '#2563eb'],
+                          ['Toplam Varlık', details.total_assets ? (details.total_assets / 1e9).toFixed(1) + ' Mr ₺' : '—', '#7c3aed'],
+                          ['Özkaynaklar', details.equity ? (details.equity / 1e9).toFixed(1) + ' Mr ₺' : '—', '#E30A17'],
+                        ].map(([l, v, c]) => (
+                          <div key={l} style={{ background: 'white', border: '1px solid #e8edf5', borderRadius: 12, padding: '14px 16px', textAlign: 'center' }}>
+                            <div style={{ color: '#94a3b8', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', marginBottom: 6 }}>{l}</div>
+                            <div style={{ color: c, fontSize: 16, fontWeight: 800 }}>{v}</div>
                           </div>
                         ))}
                       </div>
-                      {TF_PARAMS[signal.timeframe] && (
-                        <div style={{ marginTop:12,background:'#f3f0ff',borderRadius:10,padding:'10px 14px',fontSize:12,color:'#7c3aed',fontWeight:600 }}>
-                          IFT CCI hesabı: CCI uzunluk = {TF_PARAMS[signal.timeframe].cci} · WMA smoothing = {TF_PARAMS[signal.timeframe].wma}
-                        </div>
-                      )}
+                    </>
+                  ) : (
+                    <div style={{ background: 'white', border: '1px solid #e8edf5', borderRadius: 12, padding: 40, textAlign: 'center', color: '#94a3b8' }}>
+                      <div style={{ fontSize: 32, marginBottom: 8, opacity: 0.3 }}>📊</div>
+                      <p style={{ fontSize: 13 }}>Finansal veri henüz yüklenmedi</p>
                     </div>
                   )}
-                  <div style={{ background:'white',border:'1px solid #e8edf5',borderRadius:14,padding:20 }}>
-                    <div style={{ fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:0.5,marginBottom:12 }}>Teknik Yorum</div>
-                    <p style={{ color:'#475569',fontSize:14,lineHeight:1.8 }}>{analysis.teknik_yorum}</p>
-                  </div>
                 </div>
               )}
 
-              {/* KAP HABERLERİ */}
-              {tab==='kap' && (
-                <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
+              {tab === 'kap' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {kapNews.length === 0 ? (
-                    <div style={{ background:'white',border:'1px solid #e8edf5',borderRadius:14,padding:40,textAlign:'center',color:'#94a3b8' }}>
-                      <div style={{ fontSize:32,marginBottom:8,opacity:0.3 }}>📋</div>
-                      <p>Bu hisse için KAP bildirimi bulunamadı</p>
+                    <div style={{ background: 'white', border: '1px solid #e8edf5', borderRadius: 12, padding: 40, textAlign: 'center', color: '#94a3b8' }}>
+                      <div style={{ fontSize: 32, marginBottom: 8, opacity: 0.3 }}>📋</div>
+                      <p style={{ fontSize: 13 }}>KAP bildirimi bulunamadı</p>
                     </div>
-                  ) : kapNews.map((n,i) => (
-                    <a key={i} href={n.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration:'none' }}>
-                      <div style={{ background:'white',border:'1px solid #e8edf5',borderRadius:12,padding:'14px 18px',display:'flex',gap:14,alignItems:'flex-start',transition:'box-shadow 0.15s',cursor:'pointer' }}
-                        onMouseEnter={e=>e.currentTarget.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)'}
-                        onMouseLeave={e=>e.currentTarget.style.boxShadow='none'}>
-                        <div style={{ background:'#E30A17',color:'white',borderRadius:8,width:24,height:24,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,flexShrink:0 }}>{i+1}</div>
-                        <div style={{ flex:1 }}>
-                          <p style={{ color:'#1e293b',fontSize:13,fontWeight:600,margin:0,marginBottom:4,lineHeight:1.5 }}>{n.title}</p>
-                          <p style={{ color:'#94a3b8',fontSize:11,margin:0 }}>{n.date} · KAP'ta görüntüle →</p>
+                  ) : kapNews.map((n, i) => (
+                    <a key={i} href={n.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                      <div style={{ background: 'white', border: '1px solid #e8edf5', borderRadius: 12, padding: '14px 16px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                        <div style={{ background: '#E30A17', color: 'white', borderRadius: 6, width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                        <div>
+                          <p style={{ color: '#1e293b', fontSize: 13, fontWeight: 600, margin: 0, marginBottom: 3 }}>{n.title}</p>
+                          <p style={{ color: '#94a3b8', fontSize: 11, margin: 0 }}>{n.date} · KAP →</p>
                         </div>
                       </div>
                     </a>
@@ -231,31 +251,19 @@ function AnalysisModal({ ticker, signal, onClose }) {
 function AddWatchModal({ signal, onAdd, onClose }) {
   const [note, setNote] = useState('')
   return (
-    <div style={{ position:'fixed',inset:0,background:'rgba(15,23,42,0.5)',backdropFilter:'blur(8px)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:3000,padding:20 }} onClick={onClose}>
-      <div style={{ background:'white',borderRadius:20,width:'min(480px,100%)',boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }} onClick={e=>e.stopPropagation()}>
-        <div style={{ padding:'22px 26px',background:'linear-gradient(135deg,#E30A17,#c00812)',borderRadius:'20px 20px 0 0' }}>
-          <div style={{ color:'white',fontSize:16,fontWeight:700 }}>★ Takibe Al — {signal.ticker}</div>
-          <div style={{ color:'rgba(255,255,255,0.7)',fontSize:12,marginTop:3 }}>Giriş: ₺{fmtPrice(signal.price)} · {TF_LABELS[signal.timeframe]||signal.timeframe}</div>
-        </div>
-        <div style={{ padding:'22px 26px',display:'flex',flexDirection:'column',gap:14 }}>
-          <div>
-            <label style={{ color:'#64748b',fontSize:11,fontWeight:600,display:'block',marginBottom:6,textTransform:'uppercase',letterSpacing:0.5 }}>Not / Açıklama</label>
-            <textarea value={note} onChange={e=>setNote(e.target.value)} rows={4} autoFocus
-              placeholder="örn: IFT CCI kesişimi, günlük. Hedef: 310₺. Stop: 270₺."
-              style={{ width:'100%',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:10,color:'#334155',padding:'12px 14px',fontSize:13,outline:'none',resize:'vertical',lineHeight:1.7,fontFamily:'inherit' }} />
-          </div>
-          <div style={{ background:'#f8fafc',border:'1px solid #e8edf5',borderRadius:10,padding:'12px 16px',display:'flex',gap:24,flexWrap:'wrap' }}>
-            {[['Ticker',signal.ticker],['Giriş Fiyatı','₺'+fmtPrice(signal.price)],['Zaman',TF_LABELS[signal.timeframe]||signal.timeframe],['Tarih',new Date().toLocaleDateString('tr-TR')]].map(([l,v])=>(
-              <div key={l}>
-                <div style={{ color:'#94a3b8',fontSize:10,fontWeight:600,textTransform:'uppercase',letterSpacing:0.5,marginBottom:2 }}>{l}</div>
-                <div style={{ color:'#1e293b',fontSize:12,fontWeight:700 }}>{v}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div style={{ padding:'16px 26px',borderTop:'1px solid #f1f5f9',display:'flex',justifyContent:'flex-end',gap:10 }}>
-          <button onClick={onClose} style={{ background:'none',border:'1px solid #e2e8f0',color:'#64748b',padding:'9px 20px',borderRadius:10,cursor:'pointer',fontSize:12,fontWeight:500 }}>İptal</button>
-          <button onClick={()=>onAdd(note)} style={{ background:'#E30A17',border:'none',color:'white',padding:'9px 24px',borderRadius:10,cursor:'pointer',fontSize:12,fontWeight:700 }}>★ Takibe Al</button>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 3000 }}
+      onClick={onClose}>
+      <div style={{ background: 'white', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 600, padding: '20px 20px 32px', boxShadow: '0 -10px 40px rgba(0,0,0,0.2)' }}
+        onClick={e => e.stopPropagation()}>
+        <div style={{ width: 40, height: 4, background: '#e2e8f0', borderRadius: 2, margin: '0 auto 20px' }} />
+        <div style={{ color: '#1e293b', fontSize: 16, fontWeight: 700, marginBottom: 4 }}>★ Takibe Al — {signal.ticker}</div>
+        <div style={{ color: '#94a3b8', fontSize: 12, marginBottom: 16 }}>₺{fmtPrice(signal.price)} · {TF_LABELS[signal.timeframe] || signal.timeframe}</div>
+        <textarea value={note} onChange={e => setNote(e.target.value)} rows={3} autoFocus
+          placeholder="Not ekle... (hedef fiyat, stop loss vb.)"
+          style={{ width: '100%', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '12px 14px', fontSize: 13, outline: 'none', resize: 'none', fontFamily: 'inherit', marginBottom: 12 }} />
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={onClose} style={{ flex: 1, background: '#f1f5f9', border: 'none', color: '#64748b', padding: 12, borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit' }}>İptal</button>
+          <button onClick={() => onAdd(note)} style={{ flex: 2, background: '#E30A17', border: 'none', color: 'white', padding: 12, borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 700, fontFamily: 'inherit' }}>★ Takibe Al</button>
         </div>
       </div>
     </div>
@@ -264,83 +272,95 @@ function AddWatchModal({ signal, onAdd, onClose }) {
 
 /* ── TAKİP LİSTESİ ── */
 function WatchlistPage({ watchlist, onRemove, onUpdateNote }) {
-  const [editingNote, setEditingNote] = useState(null)
-  const [noteVal, setNoteVal]         = useState('')
-  const [sortBy, setSortBy]           = useState('date')
+  const [editingId, setEditingId] = useState(null)
+  const [noteVal, setNoteVal]     = useState('')
+  const [sortBy, setSortBy]       = useState('date')
 
-  const sorted = [...watchlist].sort((a,b) => {
-    if (sortBy==='date')   return new Date(b.added_at) - new Date(a.added_at)
-    if (sortBy==='change') return (b.change_pct||0) - (a.change_pct||0)
+  const sorted = [...watchlist].sort((a, b) => {
+    if (sortBy === 'date')   return new Date(b.added_at) - new Date(a.added_at)
+    if (sortBy === 'change') return (b.change_pct || 0) - (a.change_pct || 0)
     return a.ticker.localeCompare(b.ticker)
   })
 
-  const winners = watchlist.filter(w=>(w.change_pct||0)>0).length
-  const losers  = watchlist.filter(w=>(w.change_pct||0)<0).length
-  const avgPct  = watchlist.length ? (watchlist.reduce((s,w)=>s+(w.change_pct||0),0)/watchlist.length).toFixed(2) : 0
+  const avgPct = watchlist.length
+    ? (watchlist.reduce((s, w) => s + (w.change_pct || 0), 0) / watchlist.length).toFixed(2)
+    : 0
 
   if (!watchlist.length) return (
-    <div style={{ display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:'60vh',gap:16 }}>
-      <div style={{ fontSize:56,opacity:0.15 }}>★</div>
-      <div style={{ color:'#94a3b8',fontSize:14,textAlign:'center' }}>Takip listesi boş.<br/>Sinyal tablosundaki ☆ butonuna tıkla.</div>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', gap: 12 }}>
+      <div style={{ fontSize: 48, opacity: 0.15 }}>★</div>
+      <p style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center' }}>Takip listesi boş.<br />Sinyal tablosundan ☆ ile ekle.</p>
     </div>
   )
 
   return (
-    <div style={{ padding:'28px 32px' }}>
-      <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:28 }}>
-        {[['Takipteki Hisse',watchlist.length,'#1e293b'],['Ortalama Getiri',(avgPct>0?'+':'')+avgPct+'%',parseFloat(avgPct)>=0?'#059669':'#dc2626'],['Kazanan',winners+' hisse','#059669'],['Kaybeden',losers+' hisse','#dc2626']].map(([l,v,c])=><StatCard key={l} label={l} value={v} color={c}/>)}
-      </div>
-      <div style={{ display:'flex',gap:6,marginBottom:16 }}>
-        {[['date','Tarihe Göre'],['change','Getiriye Göre'],['ticker','A-Z']].map(([k,l])=>(
-          <button key={k} onClick={()=>setSortBy(k)} style={{ background:sortBy===k?'#E30A17':'white',border:'1px solid',borderColor:sortBy===k?'#E30A17':'#e2e8f0',color:sortBy===k?'white':'#64748b',padding:'6px 14px',borderRadius:8,cursor:'pointer',fontSize:12,fontWeight:600 }}>{l}</button>
+    <div style={{ padding: '16px 16px 80px' }}>
+      {/* Özet */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 16 }}>
+        {[
+          ['Takip', watchlist.length, '#1e293b'],
+          ['Ort.', (avgPct > 0 ? '+' : '') + avgPct + '%', parseFloat(avgPct) >= 0 ? '#059669' : '#dc2626'],
+          ['Kzn/Kbdn', watchlist.filter(w => (w.change_pct || 0) > 0).length + '/' + watchlist.filter(w => (w.change_pct || 0) < 0).length, '#7c3aed'],
+        ].map(([l, v, c]) => (
+          <div key={l} style={{ background: 'white', borderRadius: 12, padding: '12px 14px', border: '1px solid #e8edf5', textAlign: 'center' }}>
+            <div style={{ color: '#94a3b8', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>{l}</div>
+            <div style={{ color: c, fontSize: 18, fontWeight: 800 }}>{v}</div>
+          </div>
         ))}
       </div>
-      <div style={{ background:'white',borderRadius:16,border:'1px solid #e8edf5',overflow:'hidden',boxShadow:'0 1px 4px rgba(0,0,0,0.04)' }}>
-        <div style={{ display:'grid',gridTemplateColumns:'110px 90px 110px 110px 110px 100px 100px 1fr 50px',padding:'12px 20px',borderBottom:'1px solid #f1f5f9',background:'#f8fafc',gap:8 }}>
-          {['HİSSE','ZAM. DİL.','GİRİŞ','ŞU AN','DEĞİŞİM','EN YÜKSEK','EN DÜŞÜK','NOT',''].map((h,i)=>(
-            <span key={i} style={{ color:'#94a3b8',fontSize:10,fontWeight:600,textTransform:'uppercase',letterSpacing:0.5 }}>{h}</span>
-          ))}
-        </div>
-        {sorted.map(item=>(
-          <div key={item.id} style={{ display:'grid',gridTemplateColumns:'110px 90px 110px 110px 110px 100px 100px 1fr 50px',padding:'16px 20px',borderBottom:'1px solid #f8fafc',alignItems:'center',gap:8,transition:'background 0.15s' }}
-            onMouseEnter={e=>e.currentTarget.style.background='#fafbfc'}
-            onMouseLeave={e=>e.currentTarget.style.background='white'}>
-            <div>
-              <div style={{ color:'#1e293b',fontWeight:700,fontSize:14 }}>{item.ticker}</div>
-              <div style={{ color:'#94a3b8',fontSize:10,marginTop:2 }}>{new Date(item.added_at).toLocaleDateString('tr-TR')}</div>
-            </div>
-            <span style={{ background:'#f3f0ff',color:'#7c3aed',fontSize:11,padding:'3px 8px',borderRadius:6,fontWeight:600,width:'fit-content' }}>{TF_SHORT[item.timeframe]||item.timeframe}</span>
-            <span style={{ color:'#64748b',fontSize:13 }}>₺{fmtPrice(item.entry_price)}</span>
-            <span style={{ color:'#1e293b',fontSize:13,fontWeight:600 }}>₺{fmtPrice(item.current_price||item.entry_price)}</span>
-            <div>
-              <div style={{ color:(item.change_pct||0)>=0?'#059669':'#dc2626',fontSize:13,fontWeight:700 }}>{(item.change_pct||0)>=0?'+':''}{(item.change_pct||0).toFixed(2)}%</div>
-              <div style={{ marginTop:4,height:3,background:'#f1f5f9',borderRadius:2,width:70 }}>
-                <div style={{ height:'100%',borderRadius:2,width:Math.min(Math.abs(item.change_pct||0)*3,100)+'%',background:(item.change_pct||0)>=0?'#059669':'#dc2626' }}/>
+
+      {/* Sıralama */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+        {[['date', 'Tarih'], ['change', 'Getiri'], ['ticker', 'A-Z']].map(([k, l]) => (
+          <button key={k} onClick={() => setSortBy(k)} style={{ background: sortBy === k ? '#E30A17' : 'white', border: '1px solid', borderColor: sortBy === k ? '#E30A17' : '#e2e8f0', color: sortBy === k ? 'white' : '#64748b', padding: '6px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'inherit' }}>{l}</button>
+        ))}
+      </div>
+
+      {/* Liste */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {sorted.map(item => (
+          <div key={item.id} style={{ background: 'white', borderRadius: 14, border: '1px solid #e8edf5', padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#1e293b' }}>{item.ticker}</div>
+                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{new Date(item.added_at).toLocaleDateString('tr-TR')} · {TF_SHORT[item.timeframe] || item.timeframe}</div>
               </div>
+              <button onClick={() => onRemove(item.id)} style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '4px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>✕</button>
             </div>
-            <span style={{ color:'#059669',fontSize:12,fontWeight:600 }}>+{Math.abs(item.high_pct||0).toFixed(2)}%</span>
-            <span style={{ color:'#dc2626',fontSize:12,fontWeight:600 }}>-{Math.abs(item.low_pct||0).toFixed(2)}%</span>
-            <div>
-              {editingNote===item.id ? (
-                <div style={{ display:'flex',gap:6 }}>
-                  <textarea value={noteVal} onChange={e=>setNoteVal(e.target.value)} rows={2} autoFocus
-                    style={{ flex:1,background:'#f8fafc',border:'1px solid #7c3aed',borderRadius:6,color:'#334155',padding:'6px 8px',fontSize:11,outline:'none',resize:'none',fontFamily:'inherit' }}/>
-                  <div style={{ display:'flex',flexDirection:'column',gap:4 }}>
-                    <button onClick={()=>{onUpdateNote(item.id,noteVal);setEditingNote(null)}} style={{ background:'#059669',border:'none',color:'white',padding:'4px 8px',borderRadius:5,cursor:'pointer',fontSize:10 }}>✓</button>
-                    <button onClick={()=>setEditingNote(null)} style={{ background:'#f1f5f9',border:'none',color:'#64748b',padding:'4px 8px',borderRadius:5,cursor:'pointer',fontSize:10 }}>✕</button>
-                  </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 10 }}>
+              {[
+                ['Giriş', '₺' + fmtPrice(item.entry_price), '#64748b'],
+                ['Şu An', '₺' + fmtPrice(item.current_price || item.entry_price), '#1e293b'],
+                ['Değişim', (item.change_pct || 0) >= 0 ? '+' + (item.change_pct || 0).toFixed(2) + '%' : (item.change_pct || 0).toFixed(2) + '%', (item.change_pct || 0) >= 0 ? '#059669' : '#dc2626'],
+              ].map(([l, v, c]) => (
+                <div key={l} style={{ background: '#f8fafc', borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
+                  <div style={{ color: '#94a3b8', fontSize: 9, fontWeight: 600, textTransform: 'uppercase', marginBottom: 3 }}>{l}</div>
+                  <div style={{ color: c, fontSize: 13, fontWeight: 700 }}>{v}</div>
                 </div>
-              ) : (
-                <div onClick={()=>{setEditingNote(item.id);setNoteVal(item.note||'')}}
-                  style={{ cursor:'text',color:item.note?'#475569':'#cbd5e1',fontSize:12,lineHeight:1.5,padding:'4px 6px',borderRadius:6 }}>
-                  {item.note||<span style={{ fontStyle:'italic' }}>not ekle...</span>}
-                </div>
-              )}
+              ))}
             </div>
-            <button onClick={()=>onRemove(item.id)}
-              style={{ background:'#fef2f2',border:'1px solid #fecaca',color:'#dc2626',padding:'6px 10px',borderRadius:8,cursor:'pointer',fontSize:12,fontWeight:600,transition:'all 0.15s' }}
-              onMouseEnter={e=>{e.target.style.background='#dc2626';e.target.style.color='white'}}
-              onMouseLeave={e=>{e.target.style.background='#fef2f2';e.target.style.color='#dc2626'}}>✕</button>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <span style={{ background: '#f0fdf4', color: '#059669', fontSize: 11, padding: '3px 8px', borderRadius: 6, fontWeight: 600 }}>↑ +{Math.abs(item.high_pct || 0).toFixed(2)}%</span>
+              <span style={{ background: '#fef2f2', color: '#dc2626', fontSize: 11, padding: '3px 8px', borderRadius: 6, fontWeight: 600 }}>↓ -{Math.abs(item.low_pct || 0).toFixed(2)}%</span>
+            </div>
+
+            {editingId === item.id ? (
+              <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
+                <textarea value={noteVal} onChange={e => setNoteVal(e.target.value)} rows={2} autoFocus
+                  style={{ flex: 1, background: '#f8fafc', border: '1px solid #7c3aed', borderRadius: 8, padding: '8px 10px', fontSize: 12, outline: 'none', resize: 'none', fontFamily: 'inherit' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <button onClick={() => { onUpdateNote(item.id, noteVal); setEditingId(null) }} style={{ background: '#059669', border: 'none', color: 'white', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>✓</button>
+                  <button onClick={() => setEditingId(null)} style={{ background: '#f1f5f9', border: 'none', color: '#64748b', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>✕</button>
+                </div>
+              </div>
+            ) : (
+              <div onClick={() => { setEditingId(item.id); setNoteVal(item.note || '') }}
+                style={{ marginTop: 8, cursor: 'text', color: item.note ? '#475569' : '#cbd5e1', fontSize: 12, padding: '6px 8px', background: '#f8fafc', borderRadius: 8, minHeight: 32 }}>
+                {item.note || 'Not ekle...'}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -350,6 +370,8 @@ function WatchlistPage({ watchlist, onRemove, onUpdateNote }) {
 
 /* ── ANA UYGULAMA ── */
 export default function App() {
+  const [session, setSession]               = useState(null)
+  const [authLoading, setAuthLoading]       = useState(true)
   const [page, setPage]                     = useState('signals')
   const [signals, setSignals]               = useState([])
   const [watchlist, setWatchlist]           = useState([])
@@ -360,213 +382,207 @@ export default function App() {
   const [lastUpdate, setLastUpdate]         = useState(null)
   const [searchTerm, setSearchTerm]         = useState('')
 
+  // Auth kontrolü
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setAuthLoading(false)
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
   async function fetchSignals() {
-    const { data } = await supabase.from('signals').select('*').order('created_at',{ascending:false}).limit(500)
+    const { data } = await supabase.from('signals').select('*').order('created_at', { ascending: false }).limit(500)
     if (data) { setSignals(data); setLastUpdate(new Date()) }
     setLoading(false)
   }
   async function fetchWatchlist() {
-    const { data } = await supabase.from('watchlist').select('*').order('added_at',{ascending:false})
+    const { data } = await supabase.from('watchlist').select('*').order('added_at', { ascending: false })
     if (data) setWatchlist(data)
   }
 
   useEffect(() => {
+    if (!session) return
     fetchSignals(); fetchWatchlist()
-    const i = setInterval(()=>{fetchSignals();fetchWatchlist()},60000)
-    return ()=>clearInterval(i)
-  }, [])
+    const i = setInterval(() => { fetchSignals(); fetchWatchlist() }, 60000)
+    return () => clearInterval(i)
+  }, [session])
 
   async function handleAddToWatch(note) {
     const s = addingSignal
-    if (watchlist.find(w=>w.ticker===s.ticker)) { setAddingSignal(null); return }
+    if (watchlist.find(w => w.ticker === s.ticker)) { setAddingSignal(null); return }
     const { data } = await supabase.from('watchlist').insert([{
-      ticker:s.ticker, entry_price:s.price, current_price:s.price,
-      high_price:s.price, low_price:s.price, note,
-      timeframe:s.timeframe, criteria:s.criteria,
-      added_at:new Date().toISOString(), updated_at:new Date().toISOString(),
-      change_pct:0, high_pct:0, low_pct:0,
+      ticker: s.ticker, entry_price: s.price, current_price: s.price,
+      high_price: s.price, low_price: s.price, note,
+      timeframe: s.timeframe, criteria: s.criteria,
+      added_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      change_pct: 0, high_pct: 0, low_pct: 0,
     }]).select().single()
-    if (data) setWatchlist(prev=>[data,...prev])
+    if (data) setWatchlist(prev => [data, ...prev])
     setAddingSignal(null)
   }
   async function handleRemoveWatch(id) {
-    await supabase.from('watchlist').delete().eq('id',id)
-    setWatchlist(prev=>prev.filter(w=>w.id!==id))
+    await supabase.from('watchlist').delete().eq('id', id)
+    setWatchlist(prev => prev.filter(w => w.id !== id))
   }
-  async function handleUpdateNote(id,note) {
-    await supabase.from('watchlist').update({note,updated_at:new Date().toISOString()}).eq('id',id)
-    setWatchlist(prev=>prev.map(w=>w.id===id?{...w,note}:w))
+  async function handleUpdateNote(id, note) {
+    await supabase.from('watchlist').update({ note, updated_at: new Date().toISOString() }).eq('id', id)
+    setWatchlist(prev => prev.map(w => w.id === id ? { ...w, note } : w))
   }
 
-  const timeframes = ['Tümü',...new Set(signals.map(s=>s.timeframe))]
-  const filtered = signals.filter(s=>{
-    if (filterTF!=='Tümü' && s.timeframe!==filterTF) return false
+  const timeframes  = ['Tümü', ...new Set(signals.map(s => s.timeframe))]
+  const filtered    = signals.filter(s => {
+    if (filterTF !== 'Tümü' && s.timeframe !== filterTF) return false
     if (searchTerm && !s.ticker.toLowerCase().includes(searchTerm.toLowerCase())) return false
     return true
   })
-  const todaySignals = signals.filter(s=>Date.now()-new Date(s.created_at)<86400000).length
+
+  if (authLoading) return (
+    <div style={{ minHeight: '100vh', background: '#E30A17', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 40, height: 40, border: '3px solid rgba(255,255,255,0.3)', borderTop: '3px solid white', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  )
+
+  if (!session) return <LoginPage onLogin={() => {}} />
 
   return (
-    <div style={{ minHeight:'100vh',background:'#f1f5f9',fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#f1f5f9', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', maxWidth: 600, margin: '0 auto' }}>
       <style>{`
-        *{box-sizing:border-box;margin:0;padding:0}
-        ::-webkit-scrollbar{width:5px}
-        ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
-        button,input,textarea{font-family:inherit}
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+        button, input, textarea { font-family: inherit; }
       `}</style>
 
+      {/* Yasal Uyarı Banner */}
+      <div style={{ background: '#fffbeb', borderBottom: '1px solid #fde68a', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontSize: 13 }}>⚠️</span>
+        <p style={{ fontSize: 11, color: '#92400e', lineHeight: 1.4 }}>Bu platform yatırım tavsiyesi içermez. Gösterilen sinyaller teknik analiz amaçlıdır.</p>
+      </div>
+
       {/* HEADER */}
-      <header style={{ background:'white',borderBottom:'1px solid #e8edf5',boxShadow:'0 1px 3px rgba(0,0,0,0.04)',position:'sticky',top:0,zIndex:100 }}>
-        <div style={{ maxWidth:1400,margin:'0 auto',padding:'0 32px',height:64,display:'flex',alignItems:'center',justifyContent:'space-between' }}>
-          <div style={{ display:'flex',alignItems:'center',gap:32 }}>
-            <div style={{ display:'flex',alignItems:'center',gap:10 }}>
-              <div style={{ width:32,height:32,background:'linear-gradient(135deg,#E30A17,#c00812)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center' }}>
-                <span style={{ color:'white',fontSize:16 }}>★</span>
-              </div>
-              <div>
-                <div style={{ fontWeight:800,fontSize:15,color:'#1e293b',letterSpacing:-0.3 }}>BIST Tarayıcı</div>
-                <div style={{ fontSize:10,color:'#94a3b8',fontWeight:500 }}>IFT CCI Sinyal Sistemi</div>
-              </div>
-            </div>
-            <nav style={{ display:'flex',gap:2 }}>
-              {[['signals','📊 Sinyaller'],['watchlist','★ Takip Listesi']].map(([k,l])=>(
-                <button key={k} onClick={()=>setPage(k)} style={{ background:page===k?'#fef2f2':'none',border:'none',color:page===k?'#E30A17':'#64748b',padding:'8px 16px',cursor:'pointer',fontSize:13,fontWeight:page===k?700:500,borderRadius:8,display:'flex',alignItems:'center',gap:6,transition:'all 0.15s' }}>
-                  {l}
-                  {k==='watchlist'&&watchlist.length>0&&<span style={{ background:'#E30A17',color:'white',borderRadius:10,padding:'1px 6px',fontSize:10,fontWeight:700 }}>{watchlist.length}</span>}
-                </button>
-              ))}
-            </nav>
+      <header style={{ background: 'white', borderBottom: '1px solid #e8edf5', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 28, height: 28, background: 'linear-gradient(135deg, #E30A17, #c00812)', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: 'white', fontSize: 14 }}>★</span>
           </div>
-          <div style={{ display:'flex',alignItems:'center',gap:16 }}>
-            {lastUpdate&&(
-              <div style={{ textAlign:'right' }}>
-                <div style={{ fontSize:10,color:'#94a3b8' }}>Son güncelleme</div>
-                <div style={{ fontSize:12,color:'#64748b',fontWeight:600 }}>{lastUpdate.toLocaleTimeString('tr-TR')}</div>
-              </div>
-            )}
-            <button onClick={()=>{fetchSignals();fetchWatchlist()}} style={{ background:'#f1f5f9',border:'1px solid #e2e8f0',color:'#64748b',padding:'8px 16px',borderRadius:10,cursor:'pointer',fontSize:12,fontWeight:600 }}>↻ Yenile</button>
-            <TurkishFlag/>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 14, color: '#1e293b' }}>BIST Tarayıcı</div>
+            {lastUpdate && <div style={{ fontSize: 10, color: '#94a3b8' }}>{lastUpdate.toLocaleTimeString('tr-TR')}</div>}
           </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <TurkishFlag />
+          <button onClick={() => supabase.auth.signOut()} style={{ background: '#f1f5f9', border: 'none', color: '#64748b', padding: '6px 10px', borderRadius: 8, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>Çıkış</button>
         </div>
       </header>
 
-      <main style={{ maxWidth:1400,margin:'0 auto',padding:'28px 32px' }}>
-
-        {/* SİNYALLER */}
-        {page==='signals' && (
-          <>
-            <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:28 }}>
-              <StatCard label="Toplam Sinyal" value={signals.length} color="#E30A17" sub="veritabanında"/>
-              <StatCard label="Bugün" value={todaySignals} color="#2563eb" sub="son 24 saat"/>
-              <StatCard label="Takip Listesi" value={watchlist.length} color="#059669" sub="hisse takipte" onClick={()=>setPage('watchlist')}/>
-              <StatCard label="Filtrelenen" value={filtered.length} color="#7c3aed" sub="gösterilen"/>
+      {/* İÇERİK */}
+      {page === 'signals' && (
+        <div style={{ padding: '16px 16px 80px' }}>
+          {/* Arama + Filtre */}
+          <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e8edf5', padding: '12px 14px', marginBottom: 14 }}>
+            <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="🔍 Hisse ara... (THYAO)"
+              style={{ width: '100%', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 12px', fontSize: 13, outline: 'none', marginBottom: 10 }} />
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {timeframes.map(tf => (
+                <button key={tf} onClick={() => setFilterTF(tf)} style={{ background: filterTF === tf ? '#E30A17' : '#f8fafc', color: filterTF === tf ? 'white' : '#64748b', border: `1px solid ${filterTF === tf ? '#E30A17' : '#e2e8f0'}`, padding: '5px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>
+                  {tf === 'Tümü' ? 'Tümü' : TF_LABELS[tf] || tf}
+                </button>
+              ))}
             </div>
+          </div>
 
-            {/* Filtreler */}
-            <div style={{ background:'white',borderRadius:16,border:'1px solid #e8edf5',padding:'16px 20px',marginBottom:16,boxShadow:'0 1px 4px rgba(0,0,0,0.04)' }}>
-              <div style={{ display:'flex',gap:20,flexWrap:'wrap',alignItems:'center' }}>
-                <div style={{ position:'relative',flex:1,minWidth:160 }}>
-                  <span style={{ position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'#94a3b8',fontSize:14 }}>🔍</span>
-                  <input value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} placeholder="Hisse ara... (THYAO)"
-                    style={{ width:'100%',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:10,padding:'8px 12px 8px 34px',fontSize:13,color:'#1e293b',outline:'none' }}/>
-                </div>
-                <div style={{ display:'flex',gap:6,alignItems:'center',flexWrap:'wrap' }}>
-                  <span style={{ color:'#94a3b8',fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:0.5 }}>Zaman:</span>
-                  {timeframes.map(tf=>(
-                    <button key={tf} onClick={()=>setFilterTF(tf)} style={{ background:filterTF===tf?'#E30A17':'#f8fafc',color:filterTF===tf?'white':'#64748b',border:`1px solid ${filterTF===tf?'#E30A17':'#e2e8f0'}`,padding:'5px 14px',borderRadius:8,cursor:'pointer',fontSize:12,fontWeight:600,transition:'all 0.15s' }}>
-                      {tf==='Tümü'?'Tümü':TF_LABELS[tf]||tf}
-                    </button>
-                  ))}
-                </div>
+          {/* İstatistik */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 14 }}>
+            {[
+              ['Toplam', signals.length, '#E30A17'],
+              ['Bugün', signals.filter(s => Date.now() - new Date(s.created_at) < 86400000).length, '#2563eb'],
+              ['Takip', watchlist.length, '#059669'],
+            ].map(([l, v, c]) => (
+              <div key={l} onClick={l === 'Takip' ? () => setPage('watchlist') : undefined}
+                style={{ background: 'white', borderRadius: 12, padding: '12px 14px', border: '1px solid #e8edf5', textAlign: 'center', cursor: l === 'Takip' ? 'pointer' : 'default' }}>
+                <div style={{ color: '#94a3b8', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>{l}</div>
+                <div style={{ color: c, fontSize: 22, fontWeight: 800 }}>{v}</div>
               </div>
+            ))}
+          </div>
+
+          {/* Sinyal Listesi */}
+          {loading ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 120 }}>
+              <div style={{ width: 32, height: 32, border: '3px solid #f1f5f9', borderTop: '3px solid #E30A17', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
             </div>
-
-            {/* Tablo */}
-            <div style={{ background:'white',borderRadius:16,border:'1px solid #e8edf5',overflow:'hidden',boxShadow:'0 1px 4px rgba(0,0,0,0.04)' }}>
-              <div style={{ display:'grid',gridTemplateColumns:'130px 160px 100px 110px 100px 90px 110px 48px',padding:'12px 20px',borderBottom:'1px solid #f1f5f9',background:'#f8fafc',gap:8 }}>
-                {['HİSSE','ZAMAN DİLİMİ','KRİTER','FİYAT','DEĞİŞİM','IFT DEĞERİ','ZAMAN',''].map((h,i)=>(
-                  <span key={i} style={{ color:'#94a3b8',fontSize:10,fontWeight:600,textTransform:'uppercase',letterSpacing:0.5 }}>{h}</span>
-                ))}
-              </div>
-
-              {loading ? (
-                <div style={{ padding:60,textAlign:'center' }}>
-                  <div style={{ width:36,height:36,border:'3px solid #f1f5f9',borderTop:'3px solid #E30A17',borderRadius:'50%',animation:'spin 1s linear infinite',margin:'0 auto 12px' }}/>
-                  <p style={{ color:'#94a3b8',fontSize:13 }}>Yükleniyor...</p>
-                  <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-                </div>
-              ) : filtered.length===0 ? (
-                <div style={{ padding:60,textAlign:'center',color:'#94a3b8' }}>
-                  <div style={{ fontSize:32,marginBottom:8,opacity:0.3 }}>📊</div>
-                  <p style={{ fontSize:14 }}>Bu filtrelere uyan sinyal yok</p>
-                </div>
-              ) : filtered.map(s=>{
-                const inWatch = watchlist.some(w=>w.ticker===s.ticker)
+          ) : filtered.length === 0 ? (
+            <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e8edf5', padding: 40, textAlign: 'center', color: '#94a3b8' }}>
+              <div style={{ fontSize: 32, marginBottom: 8, opacity: 0.3 }}>📊</div>
+              <p style={{ fontSize: 14 }}>Sinyal bulunamadı</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {filtered.map(s => {
+                const inWatch = watchlist.some(w => w.ticker === s.ticker)
                 return (
-                  <div key={s.id} style={{ display:'grid',gridTemplateColumns:'130px 160px 100px 110px 100px 90px 110px 48px',padding:'14px 20px',borderBottom:'1px solid #f8fafc',alignItems:'center',gap:8,transition:'background 0.15s' }}
-                    onMouseEnter={e=>e.currentTarget.style.background='#fafbfc'}
-                    onMouseLeave={e=>e.currentTarget.style.background='white'}>
-
-                    <div onClick={()=>setSelectedSignal(s)} style={{ cursor:'pointer' }}>
-                      <div style={{ fontWeight:700,fontSize:14,color:'#1e293b' }}>{s.ticker}</div>
-                      <div style={{ fontSize:10,color:'#94a3b8',marginTop:2 }}>Analiz için tıkla →</div>
-                    </div>
-
-                    <div style={{ display:'flex',flexDirection:'column',gap:3 }}>
-                      <span style={{ background:'#f3f0ff',color:'#7c3aed',fontSize:11,padding:'4px 10px',borderRadius:8,fontWeight:600,width:'fit-content' }}>
-                        {TF_LABELS[s.timeframe]||s.timeframe}
-                      </span>
-                      {TF_PARAMS[s.timeframe]&&(
-                        <span style={{ color:'#94a3b8',fontSize:10 }}>CCI({TF_PARAMS[s.timeframe].cci}) · WMA({TF_PARAMS[s.timeframe].wma})</span>
-                      )}
-                    </div>
-
-                    <div style={{ display:'flex',gap:4,flexWrap:'wrap' }}>
-                      {s.criteria?.map(c=><Badge key={c} label={CRITERIA_LABELS[c]||c} color={CRITERIA_COLORS[c]||'#64748b'}/>)}
-                    </div>
-
-                    <span style={{ color:'#1e293b',fontSize:13,fontWeight:600 }}>₺{fmtPrice(s.price)}</span>
-
-                    <span style={{ color:s.change>=0?'#059669':'#dc2626',fontSize:13,fontWeight:700,background:s.change>=0?'#f0fdf4':'#fef2f2',padding:'3px 8px',borderRadius:6,width:'fit-content' }}>
-                      {s.change>=0?'+':''}{Number(s.change).toFixed(2)}%
-                    </span>
-
-                    <div>
-                      <div style={{ fontSize:13,fontWeight:700,color:s.ift_value>=0?'#059669':'#dc2626' }}>
-                        {s.ift_value!=null?Number(s.ift_value).toFixed(3):'—'}
+                  <div key={s.id} style={{ background: 'white', borderRadius: 14, border: '1px solid #e8edf5', padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                      <div onClick={() => setSelectedSignal(s)} style={{ cursor: 'pointer', flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <span style={{ fontSize: 17, fontWeight: 800, color: '#1e293b' }}>{s.ticker}</span>
+                          <span style={{ background: '#f3f0ff', color: '#7c3aed', fontSize: 10, padding: '2px 8px', borderRadius: 6, fontWeight: 600 }}>{TF_LABELS[s.timeframe] || s.timeframe}</span>
+                          {TF_PARAMS[s.timeframe] && <span style={{ color: '#94a3b8', fontSize: 10 }}>CCI({TF_PARAMS[s.timeframe].cci})</span>}
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <span style={{ fontSize: 14, fontWeight: 600, color: '#1e293b' }}>₺{fmtPrice(s.price)}</span>
+                          <span style={{ background: s.change >= 0 ? '#f0fdf4' : '#fef2f2', color: s.change >= 0 ? '#059669' : '#dc2626', fontSize: 12, fontWeight: 700, padding: '2px 8px', borderRadius: 6 }}>
+                            {s.change >= 0 ? '+' : ''}{Number(s.change).toFixed(2)}%
+                          </span>
+                          {s.ift_value != null && (
+                            <span style={{ background: '#f3f0ff', color: '#7c3aed', fontSize: 11, padding: '2px 8px', borderRadius: 6, fontWeight: 600 }}>
+                              IFT {Number(s.ift_value).toFixed(3)}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div style={{ marginTop:3,height:3,background:'#f1f5f9',borderRadius:2,width:60,position:'relative' }}>
-                        <div style={{ position:'absolute',height:'100%',borderRadius:2,width:s.ift_value!=null?Math.min(Math.abs(Number(s.ift_value))*60,60)+'px':0,background:s.ift_value>=0?'#059669':'#dc2626',left:s.ift_value>=0?'50%':'auto',right:s.ift_value<0?'50%':'auto' }}/>
-                        <div style={{ position:'absolute',left:'50%',top:-1,width:1,height:5,background:'#cbd5e1' }}/>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                        <span style={{ color: '#94a3b8', fontSize: 11 }}>{timeAgo(s.created_at)}</span>
+                        <button onClick={() => !inWatch && setAddingSignal(s)}
+                          style={{ background: inWatch ? '#fef2f2' : '#f8fafc', border: `1px solid ${inWatch ? '#fecaca' : '#e2e8f0'}`, color: inWatch ? '#E30A17' : '#94a3b8', width: 30, height: 30, borderRadius: 8, cursor: inWatch ? 'default' : 'pointer', fontSize: 14 }}>
+                          {inWatch ? '★' : '☆'}
+                        </button>
                       </div>
                     </div>
-
-                    <span style={{ color:'#94a3b8',fontSize:12 }}>{timeAgo(s.created_at)} önce</span>
-
-                    <button onClick={()=>!inWatch&&setAddingSignal(s)} title={inWatch?'Zaten takipte':'Takibe al'}
-                      style={{ background:inWatch?'#fef2f2':'#f8fafc',border:`1px solid ${inWatch?'#fecaca':'#e2e8f0'}`,color:inWatch?'#E30A17':'#94a3b8',width:32,height:32,borderRadius:8,cursor:inWatch?'default':'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.15s',flexShrink:0 }}
-                      onMouseEnter={e=>!inWatch&&Object.assign(e.target.style,{background:'#fef2f2',color:'#E30A17',borderColor:'#fecaca'})}
-                      onMouseLeave={e=>!inWatch&&Object.assign(e.target.style,{background:'#f8fafc',color:'#94a3b8',borderColor:'#e2e8f0'})}>
-                      {inWatch?'★':'☆'}
-                    </button>
+                    <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                      Detay için tıkla →
+                    </div>
                   </div>
                 )
               })}
             </div>
+          )}
+        </div>
+      )}
 
-            <p style={{ color:'#cbd5e1',fontSize:11,marginTop:12,textAlign:'center' }}>
-              Her 15 dakikada 600 BIST hissesi taranır · {filtered.length} sinyal gösteriliyor · Hisseye tıkla → Gemini AI analiz
-            </p>
-          </>
-        )}
+      {page === 'watchlist' && (
+        <WatchlistPage watchlist={watchlist} onRemove={handleRemoveWatch} onUpdateNote={handleUpdateNote} />
+      )}
 
-        {page==='watchlist' && (
-          <WatchlistPage watchlist={watchlist} onRemove={handleRemoveWatch} onUpdateNote={handleUpdateNote}/>
-        )}
-      </main>
+      {/* ALT NAVİGASYON */}
+      <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 600, background: 'white', borderTop: '1px solid #e8edf5', display: 'flex', boxShadow: '0 -4px 12px rgba(0,0,0,0.08)' }}>
+        {[['signals', '📊', 'Sinyaller'], ['watchlist', '★', 'Takip']].map(([k, icon, label]) => (
+          <button key={k} onClick={() => setPage(k)} style={{ flex: 1, background: 'none', border: 'none', padding: '12px 0', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+            <span style={{ fontSize: 20 }}>{icon}</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: page === k ? '#E30A17' : '#94a3b8' }}>{label}</span>
+            {page === k && <div style={{ width: 20, height: 2, background: '#E30A17', borderRadius: 1 }} />}
+          </button>
+        ))}
+      </nav>
 
-      {selectedSignal && <AnalysisModal ticker={selectedSignal.ticker} signal={selectedSignal} onClose={()=>setSelectedSignal(null)}/>}
-      {addingSignal   && <AddWatchModal signal={addingSignal} onAdd={handleAddToWatch} onClose={()=>setAddingSignal(null)}/>}
+      {selectedSignal && <AnalysisModal ticker={selectedSignal.ticker} signal={selectedSignal} onClose={() => setSelectedSignal(null)} />}
+      {addingSignal   && <AddWatchModal signal={addingSignal} onAdd={handleAddToWatch} onClose={() => setAddingSignal(null)} />}
     </div>
   )
 }
